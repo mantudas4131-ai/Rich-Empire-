@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rich Empire - Play & Earn</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+    
+    <style>
+        /* =========================================
+           RICH EMPIRE - GLOBAL CSS
+           ========================================= */
+        :root { 
+            --bg: #0b0b13; 
+            --card: #151520; 
+            --primary: #f5c518; 
+            --accent: #00e5ff; 
+            --danger: #ff3b30; 
+            --success: #34c759; 
+            --text: #ffffff; 
+            --text-muted: #8e8e93;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding-bottom: 70px; -webkit-tap-highlight-color: transparent; overflow-x: hidden;}
+        
+        /* HEADER */
+        .header { background: rgba(21, 21, 32, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #2a2a35; }
+        .user-profile { display: flex; align-items: center; gap: 12px; }
+        .user-profile img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; }
+        .user-info h4 { font-size: 15px; margin-bottom: 3px; font-weight: 700; color: #fff;}
+        .user-info p { font-size: 12px; color: var(--success); font-weight: 700; display: flex; gap: 10px;}
+        .menu-icon { font-size: 24px; color: var(--primary); cursor: pointer; }
+        
+        /* BOTTOM NAVIGATION */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #11111a; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #2a2a35; z-index: 90; }
+        .nav-item { color: var(--text-muted); font-size: 11px; text-align: center; font-weight: 700; text-transform: uppercase; cursor: pointer; width: 20%; }
+        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; transition: 0.3s;}
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active i { transform: translateY(-3px); }
+
+        /* VIEWS & CARDS */
+        .view-section { display: none; padding: 20px; animation: fadeIn 0.4s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a35; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary); text-transform: uppercase; }
+        
+        /* BUTTONS */
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; text-transform: uppercase; margin-top: 10px; transition: 0.2s;}
+        .btn-primary { background: linear-gradient(90deg, #d4af37, #f5c518); color: #000; }
+        .btn-payu { background: #00d285; color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        
+        /* MENU */
+        .side-menu { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; background: #11111a; border-left: 1px solid #2a2a35; z-index: 1000; transition: right 0.3s ease; padding: 20px; overflow-y: auto; }
+        .side-menu.open { right: 0; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; display: none; }
+        .overlay.active { display: block; }
+        .menu-list { list-style: none; margin-top: 15px; }
+        .menu-list li { padding: 15px 10px; border-bottom: 1px solid #222; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-weight: 600;}
+        .menu-list li i { color: var(--primary); font-size: 18px; width: 20px; }
+
+        /* GAMES & FORMS */
+        .ht-box { background: #222; aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; border: 2px solid #333; cursor: pointer; transition: 0.2s;}
+        .ht-box:hover { border-color: var(--primary); }
+        .ht-box.win { border-color: var(--success); background: rgba(52, 199, 89, 0.1); color: var(--success); font-weight: 900; font-size: 18px;}
+        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #0b0b13; color: #fff; margin-bottom: 15px; }
+        .text-center { text-align: center; }
+    </style>
+</head>
+<body>
+    
+    <header class="header">
+        <div class="user-profile">
+            <img id="userPhoto" src="https://via.placeholder.com/50" alt="Avatar"/>
+            <div class="user-info">
+                <h4>Welcome, <span id="userName">Guest</span></h4>
+                <p>
+                    <span><i class="fas fa-wallet"></i> ₹<span id="uiInr">0.00</span></span>
+                    <span style="color: var(--primary);"><i class="fas fa-coins"></i> <span id="uiPts">0</span></span>
+                </p>
+            </div>
+        </div>
+        <i class="fas fa-bars menu-icon" onclick="toggleMenu()"></i>
+    </header>
+
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <div style="text-align: right;">
+            <i class="fas fa-times" onclick="toggleMenu()" style="font-size: 24px; color: #fff; cursor: pointer; margin-bottom: 20px;"></i>
+        </div>
+        <div class="card" style="text-align: center; padding: 15px; border-color: var(--primary);">
+            <h3 id="appDays" style="color: var(--primary);">0 Days Active</h3>
+            <p style="font-size: 11px; color: #aaa; margin-top: 5px;">7 Days required for Free Withdraw</p>
+        </div>
+        <ul class="menu-list">
+            <li onclick="navTo('view-deposit'); toggleMenu();"><i class="fas fa-plus-circle"></i> Deposit Fund</li>
+            <li onclick="navTo('view-withdraw'); toggleMenu();"><i class="fas fa-money-bill-wave"></i> Withdraw Cash</li>
+            <li onclick="navTo('view-history'); toggleMenu();"><i class="fas fa-history"></i> Transaction History</li>
+            <li onclick="navTo('view-offers'); toggleMenu();"><i class="fas fa-chart-line"></i> My Daily Offers</li>
+            <hr style="border-color:#2a2a35; margin:15px 0;"/>
+            <li onclick="alert('Instructions:\n1. 50,000 Pts = ₹10\n2. Withdraw min ₹1000\n3. ₹120 withdrawal fee.\n4. VIPs can withdraw anytime.')"><i class="fas fa-book-open"></i> Instructions</li>
+            <li onclick="alert('About Us: Rich Empire is a premium gaming and earning app ensuring secure transactions.')"><i class="fas fa-info-circle"></i> About Us</li>
+            <li onclick="alert('Privacy Policy: We securely encrypt your Telegram ID and payment data.')"><i class="fas fa-shield-alt"></i> Privacy Policy</li>
+            <li onclick="window.open('https://t.me/YourBotID', '_blank')"><i class="fas fa-headset"></i> Contact Telegram Bot</li>
+        </ul>
+    </div>
+
+    <div id="app-container">
+        
+        <div id="view-home" class="view-section active">
+            <div class="card text-center" style="background: linear-gradient(45deg, #ff007c, #9d00ff); border: none;">
+                <h2 style="margin-bottom: 5px;"><i class="fas fa-bolt"></i> Daily Recharge Card</h2>
+                <p style="font-size: 13px; margin-bottom: 15px;">Claim UPI Cash (₹1, ₹5, ₹10, ₹20) Every 24 Hours!</p>
+                <button class="btn btn-primary" onclick="claimDailyBonus()" style="width: auto; padding: 10px 40px; border-radius: 25px;">CLAIM UPI CASH</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-ticket-alt"></i> Hourly Jackpot Lottery</div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Win 3x to 6x Instantly! Results every hour.</p>
+                <div style="background: linear-gradient(135deg, #2b2b3c, #161622); border: 2px dashed var(--primary); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 15px;">
+                    <h2 style="color: var(--primary); font-weight: 900; letter-spacing: 2px; margin-bottom: 10px;">RICH EMPIRE</h2>
+                    <div id="ticketNum" style="font-family: monospace; font-size: 22px; letter-spacing: 4px; background: #000; padding: 8px 20px; border-radius: 5px; color: var(--accent); display: inline-block;">RE-XXXXX</div>
+                </div>
+                <p style="font-size: 12px; text-align: center; margin-bottom: 10px;">Select Ticket Price (₹):</p>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <button class="btn btn-outline" style="padding: 10px; margin: 0;" onclick="buyLottery(10)">₹ 10</button>
+                    <button class="btn btn-outline" style="padding: 10px; margin: 0;" onclick="buyLottery(50)">₹ 50</button>
+                    <button class="btn btn-outline" style="padding: 10px; margin: 0;" onclick="buyLottery(100)">₹ 100</button>
+                    <button class="btn btn-outline" style="padding: 10px; margin: 0;" onclick="buyLottery(200)">₹ 200</button>
+                    <button class="btn btn-outline" style="padding: 10px; margin: 0;" onclick="buyLottery(500)">₹ 500</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-fire" style="color: #ff3b30;"></i> Daily Offer Packages</div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Deposit for 7 Days. Get Daily Returns + 10% Cash Back!</p>
+                
+                <div style="border: 1px solid #333; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <h3 style="color: var(--accent);">Package: ₹ 500</h3>
+                    <p style="font-size: 12px; margin: 5px 0;">Get <b style="color: #fff;">₹ 120 / Day</b> for 7 Days.</p>
+                    <button class="btn btn-payu" onclick="buyPackage(500, 120)"><i class="fas fa-bolt"></i> BUY VIA PAYU (₹500)</button>
+                </div>
+                <div style="border: 1px solid #333; padding: 15px; border-radius: 10px;">
+                    <h3 style="color: var(--accent);">Package: ₹ 1000</h3>
+                    <p style="font-size: 12px; margin: 5px 0;">Get <b style="color: #fff;">₹ 250 / Day</b> for 7 Days.</p>
+                    <button class="btn btn-payu" onclick="buyPackage(1000, 250)"><i class="fas fa-bolt"></i> BUY VIA PAYU (₹1000)</button>
+                </div>
+                <div style="border: 1px solid #333; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                    <h3 style="color: var(--accent);">Package: ₹ 5000</h3>
+                    <p style="font-size: 12px; margin: 5px 0;">Get <b style="color: #fff;">₹ 1300 / Day</b> for 7 Days.</p>
+                    <button class="btn btn-payu" onclick="buyPackage(5000, 1300)"><i class="fas fa-bolt"></i> BUY VIA PAYU (₹5000)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-games" class="view-section">
+            
+            <div class="card">
+                <div class="card-title"><i class="fas fa-shopping-cart"></i> Buy Game Points</div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-payu" style="font-size: 12px; padding: 10px;" onclick="buyPoints(10, 50000)">₹10 = 50K Pts</button>
+                    <button class="btn btn-payu" style="font-size: 12px; padding: 10px;" onclick="buyPoints(50, 250000)">₹50 = 250K Pts</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-th-large"></i> Jili Head &amp; Tail</div>
+                <p style="font-size: 12px; color: #aaa; margin-bottom: 10px;">Find hidden multipliers (2x, 3x, 5x, 10x).</p>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn btn-outline" style="margin: 0; padding: 8px;" onclick="setBet(100)">100 Pts</button>
+                    <button class="btn btn-outline" style="margin: 0; padding: 8px;" onclick="setBet(500)">500 Pts</button>
+                    <button class="btn btn-outline" style="margin: 0; padding: 8px;" onclick="setBet(1000)">1000 Pts</button>
+                </div>
+                <p style="font-size: 13px; color: var(--primary); margin-bottom: 15px; font-weight: 700;">Current Bet: <span id="uiCurBet">100</span> Pts</p>
+                <div id="htGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;"></div>
+            </div>
+
+            <div class="card text-center">
+                <div class="card-title" style="justify-content: center;"><i class="fas fa-dharmachakra"></i> Lucky Domain Spin</div>
+                <p style="font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 20px;">Domains: <span id="uiDomainBal">0</span></p>
+                <div style="font-size: 70px; margin: 20px 0; text-shadow: 0 0 30px var(--primary);">🎡</div>
+                <button class="btn btn-primary" onclick="spinWheel()">SPIN NOW (1 Domain)</button>
+                
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; gap: 10px;">
+                    <button class="btn btn-payu" style="font-size: 12px; padding: 12px;" onclick="buyDomains(10)">Buy 5 Domains (₹10)</button>
+                    <button class="btn btn-outline" id="freeSpinBtn" style="font-size: 12px; padding: 12px;" onclick="spinFree()">Free Spin (5/5)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-vip" class="view-section">
+            <h2 style="text-align:center; margin-bottom:20px; color:var(--primary);">VIP MEMBERSHIP</h2>
+            <div class="card text-center" style="border-color: #d4af37;">
+                <h3>VIP Level 1</h3>
+                <p style="font-size: 12px; margin: 10px 0;">₹1500 • 3 Days Access • 1 Withdraw/Day • 10% Cash Back</p>
+                <button class="btn btn-primary" onclick="buyVIP(1, 1500)">UPGRADE NOW (₹1500)</button>
+            </div>
+            <div class="card text-center" style="border-color: #00e5ff;">
+                <h3>VIP Level 2</h3>
+                <p style="font-size: 12px; margin: 10px 0;">₹3000 • 2 Days Access • 2 Withdraws/Day • 5% Cash Back</p>
+                <button class="btn btn-primary" onclick="buyVIP(2, 3000)">UPGRADE NOW (₹3000)</button>
+            </div>
+            <div class="card text-center" style="border-color: #ff3b30;">
+                <h3>VIP Level 3 (PRO)</h3>
+                <p style="font-size: 12px; margin: 10px 0;">₹5000 • 24Hrs Access • Unlimited Withdraws • 3% Cash Back</p>
+                <button class="btn btn-primary" onclick="buyVIP(3, 5000)">UPGRADE NOW (₹5000)</button>
+            </div>
+        </div>
+
+        <div id="view-refer" class="view-section">
+            <div class="card text-center">
+                <div class="card-title" style="justify-content: center;"><i class="fas fa-users"></i> Refer &amp; Earn</div>
+                <p style="font-size: 12px; margin-bottom: 15px;">Invite friends via Telegram! Get Commission on their 1st Deposit.</p>
+                <div style="background: #000; padding: 15px; border-radius: 8px; color: var(--accent); font-family: monospace; font-size: 14px; margin-bottom: 15px;">
+                    https://t.me/YourBotID?start=ref12345
+                </div>
+                <button class="btn btn-primary" onclick="window.open('https://t.me/share/url?url=https://t.me/YourBotID?start=ref12345&amp;text=Join%20Rich%20Empire%20and%20Earn!', '_blank')">SHARE ON TELEGRAM</button>
+            </div>
+        </div>
+
+        <div id="view-wallet" class="view-section">
+            <div class="card text-center">
+                <h2>Total Balance</h2>
+                <h1 style="color: var(--primary); font-size: 36px; margin: 10px 0;">₹ <span id="uiWalletInr">0.00</span></h1>
+                <p style="color: var(--success); font-weight: 700;"><i class="fas fa-coins"></i> <span id="uiWalletPts">0</span> Points</p>
+                
+                <div style="display: flex; gap: 15px; margin-top: 20px;">
+                    <button class="btn btn-payu" onclick="navTo('view-deposit')"><i class="fas fa-plus"></i> DEPOSIT</button>
+                    <button class="btn btn-danger" onclick="navTo('view-withdraw')"><i class="fas fa-minus"></i> WITHDRAW</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Points Exchange</div>
+                <p style="font-size: 12px; margin-bottom: 10px;">50,000 Points = ₹10</p>
+                <button class="btn btn-outline" onclick="exchangePoints()">Convert Points to ₹</button>
+            </div>
+        </div>
+
+        <div id="view-withdraw" class="view-section">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-university"></i> Withdraw Funds</div>
+                <p style="font-size: 12px; color: var(--danger); margin-bottom: 15px;">Note: Min ₹1000 required. ₹120 Fee applies.</p>
+                <input type="text" placeholder="Bank Name" />
+                <input type="number" placeholder="Account Number" />
+                <input type="text" placeholder="IFSC Code" />
+                <input type="text" placeholder="UPI ID (Optional)" />
+                <input type="number" id="wdAmount" placeholder="Amount (Min ₹1000)" />
+                <button class="btn btn-primary" onclick="requestWithdraw()">SUBMIT WITHDRAWAL</button>
+                <button class="btn btn-outline" onclick="navTo('view-wallet')">Cancel</button>
+            </div>
+        </div>
+        
+        <div id="view-deposit" class="view-section">
+            <div class="card text-center">
+                <div class="card-title" style="justify-content: center;"><i class="fas fa-wallet"></i> Add Funds</div>
+                <p style="font-size: 12px; margin-bottom: 15px;">Secure payments powered by PayU.</p>
+                <button class="btn btn-payu" onclick="depositAmt(30)">Add ₹ 30</button>
+                <button class="btn btn-payu" onclick="depositAmt(100)">Add ₹ 100</button>
+                <button class="btn btn-payu" onclick="depositAmt(500)">Add ₹ 500</button>
+                <button class="btn btn-payu" onclick="depositAmt(1000)">Add ₹ 1000</button>
+                <button class="btn btn-payu" onclick="depositAmt(5000)">Add ₹ 5000</button>
+                <button class="btn btn-outline" onclick="navTo('view-wallet')">Back</button>
+            </div>
+        </div>
+
+        <div id="view-history" class="view-section">
+            <div class="card">
+                <div class="card-title">Transaction History</div>
+                <ul id="historyList" style="list-style: none; font-size: 12px;">
+                    <li style="padding: 10px 0; border-bottom: 1px solid #333;">No transactions yet.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="view-offers" class="view-section">
+            <div class="card">
+                <div class="card-title">My Daily Offers</div>
+                <div id="offersList" style="font-size: 12px; color: #aaa;">
+                    No active packages.
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="navTo('view-home', this)"><i class="fas fa-home"></i>Home</div>
+        <div class="nav-item" onclick="navTo('view-games', this)"><i class="fas fa-gamepad"></i>Games</div>
+        <div class="nav-item" onclick="navTo('view-refer', this)"><i class="fas fa-users"></i>Refer</div>
+        <div class="nav-item" onclick="navTo('view-vip', this)"><i class="fas fa-crown"></i>VIP</div>
+        <div class="nav-item" onclick="navTo('view-wallet', this)"><i class="fas fa-wallet"></i>Wallet</div>
+    </div>
+    
+    <script>
+        // Data Variables
+        let balInr = 0.00;
+        let balPts = 0;
+        let balDomains = 0;
+        let curBet = 100;
+        let isVip = 0;
+        let activeDays = 0; 
+        let freeSpinsLeft = 5;
+        let bonusClaimed = false;
+        
+        // Init Telegram
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name;
+            if(tg.initDataUnsafe.user.photo_url) {
+                document.getElementById('userPhoto').src = tg.initDataUnsafe.user.photo_url;
+            }
+        }
+        
+        // Random Ticket Number
+        document.getElementById('ticketNum').innerText = "RE-" + Math.floor(10000 + Math.random() * 90000);
+
+        function updateUI() {
+            document.getElementById('uiInr').innerText = balInr.toFixed(2);
+            document.getElementById('uiWalletInr').innerText = balInr.toFixed(2);
+            document.getElementById('uiPts').innerText = balPts;
+            document.getElementById('uiWalletPts').innerText = balPts;
+            document.getElementById('uiDomainBal').innerText = balDomains;
+            document.getElementById('uiCurBet').innerText = curBet;
+            document.getElementById('freeSpinBtn').innerText = `Free Spin (${freeSpinsLeft}/5)`;
+        }
+
+        function addHistory(text) {
+            const list = document.getElementById('historyList');
+            if(list.innerHTML.includes('No transactions')) list.innerHTML = '';
+            list.innerHTML = `<li style="padding: 10px 0; border-bottom: 1px solid #333;">${text}</li>` + list.innerHTML;
+        }
+
+        function navTo(id, el = null) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(el) {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function toggleMenu() {
+            document.getElementById('sideMenu').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        // Home Functions
+        function claimDailyBonus() {
+            if(bonusClaimed) { alert("You have already claimed today's UPI Cash!"); return; }
+            let rewards = [1, 5, 10, 20];
+            let bonus = rewards[Math.floor(Math.random() * rewards.length)];
+            balInr += bonus;
+            bonusClaimed = true;
+            alert(`Congratulations! You received ₹${bonus} UPI Cash!`);
+            addHistory(`Daily Super Card: +₹${bonus}`);
+            updateUI();
+        }
+
+        function buyLottery(amt) {
+            if(balInr < amt) { alert("Insufficient Balance. Please Deposit."); navTo('view-deposit'); return; }
+            balInr -= amt;
+            let winChance = Math.random();
+            if(winChance > 0.6) { 
+                let multi = Math.floor(Math.random() * 4) + 3; // 3x to 6x
+                let winAmt = amt * multi;
+                balInr += winAmt;
+                alert(`JACKPOT! You won ₹${winAmt} (${multi}x)!`);
+                addHistory(`Lottery Won: +₹${winAmt}`);
+            } else {
+                alert("Better luck next hour!");
+                addHistory(`Lottery Lost: -₹${amt}`);
+            }
+            updateUI();
+        }
+
+        function buyPackage(amt, dailyAmt) {
+            if(balInr < amt) { alert("Insufficient Balance. Please Deposit via PayU."); navTo('view-deposit'); return; }
+            balInr -= amt;
+            let list = document.getElementById('offersList');
+            if(list.innerHTML.includes('No active')) list.innerHTML = '';
+            list.innerHTML += `<div style="padding: 10px; border: 1px solid var(--success); margin-bottom: 10px; border-radius: 8px;">
+                <p style="color:var(--success); font-weight: bold;">₹${amt} Package Active!</p>
+                <p>Receiving ₹${dailyAmt}/day (7 Days Left)</p>
+            </div>`;
+            alert(`Package of ₹${amt} activated!`);
+            addHistory(`Bought Package: -₹${amt}`);
+            updateUI();
+        }
+
+        // Games Functions
+        function buyPoints(inrAmt, ptsAmt) {
+            if(balInr < inrAmt) { alert("Insufficient balance."); return; }
+            balInr -= inrAmt;
+            balPts += ptsAmt;
+            alert(`Successfully bought ${ptsAmt} Points!`);
+            updateUI();
+        }
+
+        function setBet(amt) { curBet = amt; updateUI(); }
+        
+        function initHT() {
+            const grid = document.getElementById('htGrid');
+            grid.innerHTML = '';
+            for(let i=0; i<16; i++) {
+                let box = document.createElement('div');
+                box.className = 'ht-box';
+                box.innerHTML = '🪙';
+                box.onclick = () => playHT(box);
+                grid.appendChild(box);
+            }
+        }
+        
+        function playHT(box) {
+            if(box.classList.contains('win')) return;
+            if(balPts < curBet) { alert("Not enough Points! Exchange ₹ for Points."); return; }
+            balPts -= curBet;
+            
+            let rand = Math.random();
+            if(rand > 0.7) { 
+                let multi = [2, 3, 5, 10][Math.floor(Math.random() * 4)];
+                let winAmt = curBet * multi;
+                balPts += winAmt;
+                box.classList.add('win');
+                box.innerHTML = `${multi}x 🎉`;
+                addHistory(`Jili Win: +${winAmt} Pts`);
+            } else {
+                box.innerHTML = '❌';
+                addHistory(`Jili Loss: -${curBet} Pts`);
+            }
+            updateUI();
+        }
+
+        function spinWheel() {
+            if(balDomains < 1) { alert("No domains! Buy domains or use Free Spin."); return; }
+            balDomains -= 1;
+            processSpin();
+        }
+
+        function spinFree() {
+            if(freeSpinsLeft <= 0) { alert("No free spins left for today!"); return; }
+            freeSpinsLeft -= 1;
+            processSpin();
+        }
+
+        function processSpin() {
+            let rewards = [
+                {type: 'pts', val: 100}, {type: 'pts', val: 500}, {type: 'pts', val: 1000},
+                {type: 'amazon', val: 'Amazon Gift Card'}, {type: 'upi', val: '₹50 UPI Cash'},
+                {type: 'domain', val: '2 Extra Domains'}
+            ];
+            let won = rewards[Math.floor(Math.random() * rewards.length)];
+            
+            if(won.type === 'pts') {
+                balPts += won.val;
+                alert(`🎡 You won ${won.val} Points!`);
+            } else if (won.type === 'domain') {
+                balDomains += 2;
+                alert(`🎡 You won 2 Extra Domains! Spin again.`);
+            } else {
+                alert(`🎡 WOW! You won a ${won.val}! Admin will contact you.`);
+            }
+            addHistory(`Spin Result: ${won.val}`);
+            updateUI();
+        }
+
+        function buyDomains(amt) {
+            if(balInr < amt) { alert("Insufficient balance."); return; }
+            balInr -= amt;
+            balDomains += 5;
+            alert("Bought 5 Domains!");
+            updateUI();
+        }
+
+        // Wallet & VIP Functions
+        function depositAmt(amt) {
+            balInr += amt;
+            alert(`Successfully deposited ₹${amt} via PayU (Demo)`);
+            addHistory(`Deposit: +₹${amt}`);
+            updateUI();
+            navTo('view-wallet');
+        }
+
+        function requestWithdraw() {
+            let amt = parseInt(document.getElementById('wdAmount').value);
+            if(!amt || amt < 1000) { alert("Minimum withdrawal is ₹1000"); return; }
+            if(balInr < amt) { alert("Insufficient balance"); return; }
+            if(activeDays < 7 && isVip === 0) { 
+                alert(`Cannot withdraw! You need 7 days active. Current: ${activeDays} Days.`); 
+                return; 
+            }
+            balInr -= amt;
+            alert(`Withdrawal of ₹${amt - 120} (after ₹120 fee) submitted!`);
+            addHistory(`Withdrawal: -₹${amt}`);
+            updateUI();
+            navTo('view-wallet');
+        }
+        
+        function buyVIP(level, price) {
+            if(balInr < price) { alert("Insufficient Balance. Deposit first."); navTo('view-deposit'); return; }
+            balInr -= price;
+            isVip = level;
+            alert(`Congratulations! You are now VIP Level ${level}`);
+            addHistory(`Upgraded to VIP ${level}: -₹${price}`);
+            updateUI();
+        }
+
+        function exchangePoints() {
+            if(balPts < 50000) { alert("Minimum 50,000 points required to convert."); return; }
+            balPts -= 50000;
+            balInr += 10;
+            alert("50,000 Points converted to ₹10!");
+            updateUI();
+        }
+
+        // Start App
+        initHT();
+        updateUI();
+    </script>
+</body>
+</html>
